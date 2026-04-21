@@ -1,0 +1,328 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  Search, 
+  TrendingUp, 
+  AlertCircle, 
+  CheckCircle2, 
+  Info, 
+  Globe, 
+  PlaneTakeoff,
+  BarChart3,
+  LayoutDashboard,
+  FileText,
+  CreditCard,
+  Home,
+  Briefcase,
+  History,
+  ChevronRight,
+  MessageSquare,
+  ArrowRight,
+  Sun,
+  CloudRain
+} from 'lucide-react';
+
+const App = () => {
+  const [urls, setUrls] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('summary');
+  const [analyzedData, setAnalyzedData] = useState(null);
+  const [processingQueue, setProcessingQueue] = useState([]);
+
+  // 基本客觀資料庫
+  const defaultCountryInfo = {
+    '英國': { fee: '£298', duration: '6-8個月前', bank: 'Monzo, Revolut', housing: 'Rightmove, Spareroom', jobs: 'Indeed, LinkedIn', sunLevel: '低 (冬季易抑鬱)', color: 'bg-red-50 text-red-700' },
+    '加拿大': { fee: 'C$346', duration: '抽籤制', bank: 'CIBC, Scotiabank', housing: 'Kijiji, Zumper', jobs: 'Indeed', sunLevel: '中', color: 'bg-emerald-50 text-emerald-700' },
+    '澳洲': { fee: 'A$635', duration: '1-3個月前', bank: 'CommBank, NAB', housing: 'Flatmates, Gumtree', jobs: 'Seek', sunLevel: '極高', color: 'bg-blue-50 text-blue-700' },
+    '愛爾蘭': { fee: '€300', duration: '特定時段', bank: 'AIB', housing: 'Daft.ie', jobs: 'Jobs.ie', sunLevel: '低', color: 'bg-green-50 text-green-700' },
+    '捷克': { fee: '約 NT$3,500', duration: '3個月前', bank: 'Air Bank', housing: 'Bezrealitky', jobs: 'Jobs.cz', sunLevel: '中', color: 'bg-orange-50 text-orange-700' },
+    '荷蘭': { fee: '€210', duration: '特定名額', bank: 'ING', housing: 'Kamernet', jobs: 'LinkedIn', sunLevel: '中低', color: 'bg-amber-50 text-amber-700' },
+    '比利時': { fee: '€180', duration: '4個月前', bank: 'BNP', housing: 'Immoweb', jobs: 'StepStone', sunLevel: '中低', color: 'bg-yellow-50 text-yellow-700' },
+    '紐西蘭': { fee: 'NZ$455', duration: '搶名額制', bank: 'ANZ, BNZ', housing: 'Trade Me', jobs: 'Seek NZ', sunLevel: '高', color: 'bg-indigo-50 text-indigo-700' },
+    '法國': { fee: '€99', duration: '4-6個月前', bank: 'BNP', housing: 'SeLoger', jobs: 'Indeed FR', sunLevel: '中', color: 'bg-cyan-50 text-cyan-700' },
+  };
+
+  // 動態獲取國家清單 (包含新出現的國家)
+  const countryList = useMemo(() => {
+    const base = Object.keys(defaultCountryInfo);
+    if (!analyzedData) return base;
+    const detected = Object.keys(analyzedData.countryStats);
+    return Array.from(new Set([...base, ...detected]));
+  }, [analyzedData]);
+
+  const handleBatchAnalyze = () => {
+    const urlList = urls.split('\n').filter(url => url.trim() !== '');
+    if (urlList.length === 0) return;
+
+    setLoading(true);
+    setProcessingQueue(urlList.map(u => ({ url: u, status: 'pending' })));
+
+    let processedCount = 0;
+    const mockInterval = setInterval(() => {
+      if (processedCount < urlList.length) {
+        setProcessingQueue(prev => prev.map((item, idx) => 
+          idx === processedCount ? { ...item, status: 'done' } : item
+        ));
+        processedCount++;
+      } else {
+        clearInterval(mockInterval);
+        setAnalyzedData({
+          recommendation: {
+            country: '澳洲',
+            reason: '考量到妳偏好充足的陽光以避免抑鬱，澳洲的日照時數表現最優。雖然妳有寒濕水腫體質，但澳洲乾燥的氣候反而有助於緩解濕氣帶來的不適。此外，若妳仍有備賽規劃，這裡的戶外運動設施也非常完善。',
+            sunWarning: '英國與愛爾蘭的冬季日照極短，對於怕抑鬱的妳來說風險較高。'
+          },
+          countryStats: {
+            '澳洲': { score: 94, summary: '陽光充足，薪資高，非常適合怕抑鬱與戶外愛好者。', pros: ['日照極其豐富', '薪資存錢快'], cons: ['生活成本逐年升高', '房租昂貴'], timeToJob: '2週' },
+            '加拿大': { score: 88, summary: '環境友善，四季分明，但部分地區冬季較長。', pros: ['戶外活動多', '制度對華人友善'], cons: ['稅收高', '部分城市治安需注意'], timeToJob: '4週' },
+            '英國': { score: 65, summary: '日照不足可能是最大的門檻，容易產生季節性情緒失調。', pros: ['旅遊歐洲極方便', '文化深度高'], cons: ['冬季陰雨天數多', '物價極高'], timeToJob: '6週' },
+          }
+        });
+        setLoading(false);
+      }
+    }, 800);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+      {/* Header */}
+      <header className="bg-white border-b sticky top-0 z-20 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-gray-900 p-2 rounded-xl">
+              <Globe className="text-white w-5 h-5" />
+            </div>
+            <h1 className="text-xl font-black tracking-tight text-gray-800">
+              WORLD <span className="text-blue-600">SCAN</span>
+            </h1>
+          </div>
+          
+          <nav className="hidden lg:flex gap-1 overflow-x-auto max-w-2xl no-scrollbar">
+            <button 
+              onClick={() => setActiveTab('summary')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shrink-0 ${activeTab === 'summary' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+              總結推薦
+            </button>
+            {countryList.map(c => (
+              <button 
+                key={c}
+                onClick={() => setActiveTab(c)}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shrink-0 ${activeTab === c ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
+              >
+                {c}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+            <Sun className="w-4 h-4 text-amber-500" />
+            <span className="text-[10px] font-black text-gray-500 uppercase">Mental Health Priority</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-[1400px] mx-auto px-4 py-8">
+        
+        {/* Input Area */}
+        <section className="mb-10">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-200">
+            <h2 className="text-2xl font-black text-gray-800 mb-2">批次網址深度分析</h2>
+            <p className="text-sm text-gray-500 mb-6">請貼入 Dcard、Threads 或其它討論區連結（一行一個）</p>
+            
+            <textarea 
+              value={urls}
+              onChange={(e) => setUrls(e.target.value)}
+              placeholder="貼入網址..."
+              className="w-full h-32 p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:outline-none font-mono text-sm mb-4"
+            />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                {processingQueue.map((q, i) => (
+                  <div key={i} className={`w-2 h-2 rounded-full ${q.status === 'done' ? 'bg-blue-500' : 'bg-gray-200 animate-pulse'}`}></div>
+                ))}
+              </div>
+              <button 
+                onClick={handleBatchAnalyze}
+                disabled={loading || !urls}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-black transition-all flex items-center gap-3"
+              >
+                {loading ? '分析中...' : '執行深度探勘'}
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Global Summary */}
+        {activeTab === 'summary' && analyzedData && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+              <div className="lg:col-span-2 bg-white p-8 rounded-3xl border-t-8 border-blue-600 shadow-sm">
+                <h3 className="text-xl font-black text-gray-400 uppercase mb-4 tracking-widest">AI 決策推薦</h3>
+                <h4 className="text-5xl font-black text-blue-600 mb-4">{analyzedData.recommendation.country}</h4>
+                <p className="text-lg text-gray-600 leading-relaxed mb-6">
+                  {analyzedData.recommendation.reason}
+                </p>
+                <div className="bg-red-50 p-4 rounded-2xl border border-red-100 flex gap-3">
+                  <CloudRain className="w-5 h-5 text-red-500 shrink-0" />
+                  <p className="text-sm text-red-800">
+                    <span className="font-bold">心理健康提醒：</span>{analyzedData.recommendation.sunWarning}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-gray-900 text-white p-8 rounded-3xl shadow-xl">
+                <h3 className="font-black text-lg mb-6 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-blue-400" />
+                  各國決策得分
+                </h3>
+                <div className="space-y-6">
+                  {Object.entries(analyzedData.countryStats).map(([name, stat]) => (
+                    <div key={name} className="space-y-2">
+                      <div className="flex justify-between items-end">
+                        <span className="text-sm font-bold">{name}</span>
+                        <span className="text-xl font-black text-blue-400">{stat.score}</span>
+                      </div>
+                      <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${stat.score}%` }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Country Specific Dashboard */}
+        {activeTab !== 'summary' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* 國家標題與分數 */}
+            <div className="flex items-end justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <span className={`text-4xl font-black px-6 py-2 rounded-2xl ${defaultCountryInfo[activeTab]?.color || 'bg-gray-100'}`}>
+                  {activeTab}
+                </span>
+                <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
+                  <div className="text-[10px] font-black text-gray-400 uppercase">分析得分</div>
+                  <div className="text-2xl font-black text-blue-600">
+                    {analyzedData?.countryStats[activeTab]?.score || '--'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-gray-400">
+                <Sun className={`w-5 h-5 ${activeTab === '澳洲' ? 'text-amber-500' : ''}`} />
+                <span className="text-sm font-bold">日照等級：{defaultCountryInfo[activeTab]?.sunLevel || '資料分析中'}</span>
+              </div>
+            </div>
+
+            {/* 客觀與主觀摘要 */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+              <div className="lg:col-span-3 bg-white p-8 rounded-3xl shadow-sm border border-gray-200">
+                <h4 className="text-sm font-black text-gray-400 uppercase mb-4">AI 深度語義摘要 (含內文與留言)</h4>
+                <p className="text-xl font-bold text-gray-800 leading-relaxed mb-8">
+                  "{analyzedData?.countryStats[activeTab]?.summary || '根據目前的爬取資料，該地區工作機會穩定，但對於氣候與生活成本的評價較為兩極。'}"
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <div className="text-[10px] font-black text-gray-400 mb-1 tracking-widest uppercase">簽證/申請費</div>
+                    <div className="text-sm font-black">{defaultCountryInfo[activeTab]?.fee || 'NT$ --'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <div className="text-[10px] font-black text-gray-400 mb-1 tracking-widest uppercase">建議時程</div>
+                    <div className="text-sm font-black">{defaultCountryInfo[activeTab]?.duration || '待查'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <div className="text-[10px] font-black text-gray-400 mb-1 tracking-widest uppercase">平均找工</div>
+                    <div className="text-sm font-black">{analyzedData?.countryStats[activeTab]?.timeToJob || '3-5 週'}</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <div className="text-[10px] font-black text-gray-400 mb-1 tracking-widest uppercase">抑鬱風險</div>
+                    <div className="text-sm font-black text-blue-600">{defaultCountryInfo[activeTab]?.sunLevel === '低 (冬季易抑鬱)' ? '偏高' : '低'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-200">
+                <h4 className="font-black text-sm text-gray-400 mb-4 uppercase">必備工具與金融</h4>
+                <div className="space-y-4">
+                  {defaultCountryInfo[activeTab]?.bank.split(',').map(b => (
+                    <div key={b} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <CreditCard className="w-4 h-4 text-blue-500" />
+                      <span className="text-xs font-bold">{b.trim()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 優劣勢 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <div className="bg-emerald-50 p-8 rounded-3xl border border-emerald-100">
+                <h4 className="font-black text-emerald-700 mb-6 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" /> 分析優勢 Pros</h4>
+                <div className="space-y-4">
+                  {(analyzedData?.countryStats[activeTab]?.pros || ['數據抓取中']).map(p => (
+                    <div key={p} className="flex items-center gap-3 text-sm font-bold text-emerald-800 bg-white/50 p-3 rounded-xl">
+                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> {p}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-red-50 p-8 rounded-3xl border border-red-100">
+                <h4 className="font-black text-red-700 mb-6 flex items-center gap-2"><AlertCircle className="w-5 h-5" /> 潛在劣勢 Cons</h4>
+                <div className="space-y-4">
+                  {(analyzedData?.countryStats[activeTab]?.cons || ['數據分析中']).map(c => (
+                    <div key={c} className="flex items-center gap-3 text-sm font-bold text-red-800 bg-white/50 p-3 rounded-xl">
+                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div> {c}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 生存攻略與文章 */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="bg-gray-900 text-white p-8 rounded-3xl lg:col-span-1">
+                <h4 className="font-black text-blue-400 mb-6 flex items-center gap-2"><Home className="w-5 h-5" /> 生存攻略</h4>
+                <div className="space-y-6">
+                  <div>
+                    <div className="text-[10px] text-gray-500 font-bold mb-1 uppercase">找房主要管道</div>
+                    <div className="text-sm">{defaultCountryInfo[activeTab]?.housing || '待查'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-gray-500 font-bold mb-1 uppercase">常用求職平台</div>
+                    <div className="text-sm">{defaultCountryInfo[activeTab]?.jobs || '待查'}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="lg:col-span-2">
+                <h4 className="font-black text-gray-800 mb-4 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-blue-600" /> 文章與留言探勘</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2].map(i => (
+                    <div key={i} className="bg-white p-5 rounded-2xl border border-gray-200">
+                      <div className="text-[10px] font-black text-gray-400 mb-2">已納入 {10 * i + 5} 則留言深度分析</div>
+                      <h5 className="font-bold text-sm mb-2">{activeTab}工作實錄與網友評論 #{i}</h5>
+                      <p className="text-xs text-gray-500 line-clamp-2">系統已提取留言中關於住宿押金與雇主態度的細節...</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!analyzedData && !loading && (
+          <div className="text-center py-32 bg-white rounded-[40px] border-4 border-dashed border-gray-100">
+            <Globe className="w-16 h-16 text-gray-100 mx-auto mb-6" />
+            <h3 className="text-xl font-black text-gray-400">請貼入連結開始探勘</h3>
+          </div>
+        )}
+
+      </main>
+    </div>
+  );
+};
+
+export default App;
