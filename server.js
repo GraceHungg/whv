@@ -12,6 +12,10 @@ app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+app.get('/', (req, res) => {
+  res.send('WHV Scraper Backend is Running! 🚀');
+});
+
 app.post('/api/analyze', async (req, res) => {
   const { urls } = req.body;
   if (!urls || urls.length === 0) {
@@ -67,7 +71,7 @@ app.post('/api/analyze', async (req, res) => {
 
     // 2. Call Gemini API
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       generationConfig: { responseMimeType: "application/json" }
     });
 
