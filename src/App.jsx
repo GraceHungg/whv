@@ -485,7 +485,7 @@ export default function App() {
     }, 2000) // 慢一點讓用戶看到進度
 
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://whv.onrender.com'
       const response = await fetch(`${backendUrl}/api/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
